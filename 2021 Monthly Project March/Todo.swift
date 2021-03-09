@@ -10,20 +10,22 @@ import UIKit
 
 
 // TODO: Codable과 Equatable 추가
-struct Todo: Codable, Equatable {
+struct Todo: Codable, Equatable { // 각각의 Todo
     let id: Int
     var isDone: Bool
     var detail: String
     var isToday: Bool
     
-    mutating func update(isDone: Bool, detail: String, isToday: Bool) {
-        // TODO: update 로직 추가
-        
+    mutating func update(isDone: Bool, detail: String, isToday: Bool) { // Todo 개개인 각자 실행하는 함수
+        // [x] TODO: update 로직 추가
+        self.isDone = isDone
+        self.detail = detail
+        self.isToday = isToday
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
-        // TODO: 동등 조건 추가
-        return true
+        //[x] TODO: 동등 조건 추가
+        return lhs.id == rhs.id
     }
 }
 
@@ -31,27 +33,36 @@ class TodoManager {
     
     static let shared = TodoManager()
     
-    static var lastId: Int = 0
+    static var lastId: Int = 0 // 새로운 Todo 만들기 위한
     
     var todos: [Todo] = []
     
-    func createTodo(detail: String, isToday: Bool) -> Todo {
-        //TODO: create로직 추가
-        return Todo(id: 1, isDone: false, detail: "2", isToday: true)
+    func createTodo(detail: String, isToday: Bool) -> Todo { // 업뎃된 lastId와 새로 만들어진 Todo를 리턴하기만 함
+        //[x] TODO: create로직 추가
+        let nextId = TodoManager.lastId + 1
+        TodoManager.lastId = nextId
+        return Todo(id: nextId, isDone: false, detail:detail, isToday: isToday)
     }
     
     func addTodo(_ todo: Todo) {
-        //TODO: add로직 추가
+        //[x] TODO: add로직 추가
+        todos.append(todo)
+        saveTodo()
     }
     
     func deleteTodo(_ todo: Todo) {
-        //TODO: delete 로직 추가
-        
+        //[x] TODO: delete 로직 추가
+        if let index = todos.firstIndex(of: todo){
+            todos.remove(at:index)
+        }
+        saveTodo()
     }
     
-    func updateTodo(_ todo: Todo) {
-        //TODO: updatee 로직 추가
-        
+    func updateTodo(_ todo: Todo) { //todo를 파라미터로 넘겨받으면 해당 todo가 있는 todos의 위치를 찾아 업데이트 todos 자체를 업데이트 함
+        //[x] TODO: update 로직 추가
+        guard let index = todos.firstIndex(of: todo) else { return }
+        todos[index].update(isDone: todo.isDone, detail: todo.detail, isToday: todo.isToday)
+        saveTodo()
     }
     
     func saveTodo() {
@@ -66,7 +77,7 @@ class TodoManager {
     }
 }
 
-class TodoViewModel {
+class TodoViewModel { // Todomanager로부터 함수 받아옴
     
     enum Section: Int, CaseIterable {
         case today
