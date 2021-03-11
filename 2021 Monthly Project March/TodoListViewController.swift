@@ -19,9 +19,14 @@ class TodoListViewController: UIViewController {
     @IBOutlet weak var isTodayButton: UIButton!
     @IBOutlet weak var addButton: UIButton!
     
+    @IBOutlet weak var datePicker: UIDatePicker!
+    @IBOutlet weak var datePickerViewBottom: NSLayoutConstraint!
     
     // [x] TODO: TodoViewModel 만들기
     let todoListViewModel = TodoViewModel() // TodoViewModel은 Todomanager로부터 함수 받아와 활용함
+    
+    // 설정한 시각 전역변수로
+    var pickerTime:String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,10 +44,19 @@ class TodoListViewController: UIViewController {
         isTodayButton.isSelected = !isTodayButton.isSelected
     }
     
+    @IBAction func changeDatePicker(_ sender: UIDatePicker) {
+        let datePickerView = sender
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        pickerTime = formatter.string(from: datePickerView.date)
+        let currentdate = formatter.string(from: datePickerView.date)
+        print(currentdate)
+    }
     @IBAction func addTaskButtonTapped(_ sender: Any) {
         // [x] TODO: Todo 태스크 추가
         guard let detail = inputTextField.text, detail.isEmpty == false else {return }
-        let todo = TodoManager.shared.createTodo(detail: detail, isToday: isTodayButton.isSelected)
+        pickerTime = pickerTime!
+        let todo = TodoManager.shared.createTodo(detail: detail, isToday: isTodayButton.isSelected, date:pickerTime)
         todoListViewModel.addTodo(todo)
         collectionView.reloadData() // add한 todo가 업뎃됨.
         inputTextField.text=""
@@ -61,11 +75,16 @@ extension TodoListViewController {
         // [x] TODO: 키보드 높이에 따른 인풋뷰 위치 변경
         guard let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
         if noti.name == UIResponder.keyboardWillShowNotification {
-            let adjustmentHeight = keyboardFrame.height - view.safeAreaInsets.bottom
+            let adjustmentHeight = keyboardFrame.height - view.safeAreaInsets.bottom + 150
+            let datePickerHeight = keyboardFrame.height - view.safeAreaInsets.bottom
             inputViewBottom.constant=adjustmentHeight
+            datePicker.isHidden=false
+            datePickerViewBottom.constant = datePickerHeight
         } else {
             inputViewBottom.constant=0
+            datePicker.isHidden=true
         }
+        print(keyboardFrame.height)
         
     }
 }
@@ -139,7 +158,7 @@ extension TodoListViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         // [x] TODO: 사이즈 계산하기
         let width:CGFloat = collectionView.bounds.width
-        let height:CGFloat = 50
+        let height:CGFloat = 80
         return CGSize(width: width, height: height)
     }
 }
@@ -152,6 +171,9 @@ class TodoListCell: UICollectionViewCell {
     @IBOutlet weak var strikeThroughView: UIView!
     
     @IBOutlet weak var strikeThroughWidth: NSLayoutConstraint!
+    
+    
+    @IBOutlet weak var dateLabel: UILabel!
     
     var doneButtonTapHandler: ((Bool) -> Void)?
     var deleteButtonTapHandler: (() -> Void)?
@@ -170,7 +192,9 @@ class TodoListCell: UICollectionViewCell {
         // [x] TODO: 셀 업데이트 하기
         checkButton.isSelected = todo.isDone
         descriptionLabel.text = todo.detail
+        dateLabel.text = todo.date
         descriptionLabel.alpha = todo.isDone ? 0.2 : 1
+        dateLabel.alpha = todo.isDone ? 0.2 : 1
         deleteButton.isHidden = todo.isDone == false
         showStrikeThrough(todo.isDone)
     }
@@ -196,6 +220,7 @@ class TodoListCell: UICollectionViewCell {
         let isDone = checkButton.isSelected
         showStrikeThrough(isDone)
         descriptionLabel.alpha = isDone ? 0.2 : 1
+        dateLabel.alpha = isDone ? 0.2 : 1
         deleteButton.isHidden = !isDone
         doneButtonTapHandler?(isDone)
     }
